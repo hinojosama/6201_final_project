@@ -54,7 +54,6 @@ fips_Pred_D$ddn <- lapply(county_top_death$fips, function (zz) omicron_top_death
                           filter(fips == zz) %>%
                           select(day, date, newdeaths, fips))
 fips_Pred_D$lm <- lapply(fips_Pred_D$ddn, function(yy) lm(newdeaths ~ poly(day, degree = 6, raw = TRUE),  data = yy))
-#the lm function broke? was previously working and I did not change anything material to it? The problem is King county 36047 has no corresponding data reporting. AKA brooklyn.
 fips_Pred_D$Pred <- lapply(fips_Pred_D$lm, function (xx) predict(xx))
 fips_Pred_D$P_max <- lapply(fips_Pred_D$Pred, function (ww) max(ww))
 
