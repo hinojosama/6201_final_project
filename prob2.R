@@ -59,7 +59,7 @@ cases_tidy <- cases %>%
 
 #make a table of omicron cases estimated to start after date 12/20/21 and only of the 
 #fips we have identified above the top 510 fips.  Then add a day column (days since start of 
-#omicreon). Select only the columns of interest and group the information by fips
+#omicron). Select only the columns of interest and group the information by fips
 #for calculation of newdeaths.  (if not grouped data will be erroneously calculated 
 #sequentially by date). Finally filter out rows where newdeath = 0.
 omicron_top_death <- cases_tidy %>%
@@ -75,7 +75,7 @@ omicron_top_death <- cases_tidy %>%
 fips_Pred_D <- as.data.frame(paste0("fips_", county_top_death$fips))
 fips_Pred_D$fips <- county_top_death$fips
 
-#for each of these fips fill in another column that includes the corresponind slice 
+#for each of these fips fill in another column that includes the corresponding slice 
 #of omicron death data
 fips_Pred_D$ddn <- lapply(county_top_death$fips, function (zz) omicron_top_death %>%
                             filter(fips == zz) %>%
@@ -98,7 +98,8 @@ county_top_death$death_peak <- round(as.double(fips_Pred_D$P_max), digits = 1)
 county_top_death$percap_death_pk <- 
   round(county_top_death$death_peak/ (county_top_death$POPESTIMATE2020/100000), digit = 1)
 
-
+#check the final table for missing values, should be zero
+sum(is.na(county_top_death))
 
 
 #prob2 begins
@@ -166,6 +167,6 @@ prob2_df_na <- which(is.na(prob2_df))
 View(prob2_df_na)
 
 #prob2_df is tidy and ready for use in generating plots of (peak) Omicron deaths
-#per Capita vs current vaccination rate for each county.
+#per Capita vs current vaccination rate for each county..
 
 
