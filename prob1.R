@@ -62,14 +62,15 @@ county_top_death$percap_death_pk <- round(county_top_death$death_peak/ (county_t
 
 fips_vec_D <- as.list(county_top_death$fips)
 
-for (i in fips_vec_D) {county_plot_D <- 
-  omicron_top_death %>% 
-  filter(fips == i) %>%
-  select(day, newdeaths, fips)
-c19lm <- lm(newdeaths ~ poly(day, degree = 6, raw = TRUE),  data = county_plot_D)
-county_plot_D$Pred <- predict(c19lm)
-j <- ggplot(county_plot_D, aes(day,newdeaths)) +
-  geom_line() +
-  geom_line(aes(day,Pred,color="red"))
-ggsave(j, file=paste0("death_plot_", i,".png"), width = 14, height = 10, units = "cm")
-}
+# This plot code works but is commented out to avoid generation on sourcing
+# for (i in fips_vec_D) {county_plot_D <- 
+#   omicron_top_death %>% 
+#   filter(fips == i) %>%
+#   select(day, newdeaths, fips)
+# c19lm <- lm(newdeaths ~ poly(day, degree = 6, raw = TRUE),  data = county_plot_D)
+# county_plot_D$Pred <- predict(c19lm)
+# j <- ggplot(county_plot_D, aes(day,newdeaths)) +
+#   geom_line() +
+#   geom_line(aes(day,Pred,color="red"))
+# ggsave(j, file=paste0("death_plot_", i,".png"), width = 14, height = 10, units = "cm")
+# }
