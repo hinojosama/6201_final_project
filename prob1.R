@@ -25,7 +25,7 @@ pop_NYC_df <- top500_fips %>%
   filter(fips %in% exc_fips)
 pop_NYC <- sum(pop_NYC_df$POPESTIMATE2020)
 
-#make a table with covid data from the source data not including county "000" rows 
+#make a table with census data from the source data not including county "000" rows 
 #(state level data) that uses the state and name to add a fips column to match up with 
 #census data for populations. Then filter out the NYC fips which are missing from 
 #covid data and add back a row of the combined NYC info under 99999 fips. Finally 
@@ -100,9 +100,9 @@ sum(is.na(county_top_death))
 #Omicron deaths per Capita
 
 
-# This plot code below works (not a heatmap) and is commented out to avoid generation on sourcing
-# for (i in fips_vec_D) {county_plot_D <- 
-#   omicron_top_death %>% 
+#This plot code below works (not a heatmap) and is commented out to avoid generation on sourcing
+# for (i in fips_vec_D) {county_plot_D <-
+#   omicron_top_death %>%
 #   filter(fips == i) %>%
 #   select(day, newdeaths, fips)
 # c19lm <- lm(newdeaths ~ poly(day, degree = 6, raw = TRUE),  data = county_plot_D)

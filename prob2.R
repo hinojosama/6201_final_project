@@ -13,8 +13,8 @@ co_est2020 <- read_csv("co-est2020.csv")
 cases <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv", skip_empty_rows = FALSE)
 
 
-#these are the top 510 rows of covid death data by population in the fips
-#need more than 500 due to differences in this, the 2020 census data, and the 
+#these are the top 510 rows of fips data by population in the fips
+#need more than 500 due to differences in this 2020 census data and the 
 #vaccination data which uses 2019 data and includes PR/GU but not HI and 1 fips
 #in MA as will be shown below. 
 top500_fips <- co_est2020 %>%
