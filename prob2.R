@@ -5,7 +5,7 @@ library (lubridate)
 library (pracma)
 library (tidyr)
 
-#prob2 requires output of prob1 so first
+#prob2 requires modified output of prob1 total death instead of peak death so first
 #bring in the death per capita code from prob1:
 
 #make dataframes from the source data
@@ -13,10 +13,13 @@ co_est2020 <- read_csv("co-est2020.csv")
 cases <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv", skip_empty_rows = FALSE)
 
 
-#these are the top 510 rows of fips data by population in the fips
+#these are the top 510 fips in the census data by population 
 #need more than 500 due to differences in this 2020 census data and the 
 #vaccination data which uses 2019 data and includes PR/GU but not HI and 1 fips
 #in MA as will be shown below. 
+#make a table with census data not including county "000" rows 
+#(state level data) that uses the state and name to add a fips column to match up with 
+#census data for populations.
 top500_fips <- co_est2020 %>%
   select(COUNTY, STATE, POPESTIMATE2020) %>%
   filter(COUNTY != "000") %>%
@@ -33,11 +36,10 @@ pop_NYC_df <- top500_fips %>%
   filter(fips %in% exc_fips)
 pop_NYC <- sum(pop_NYC_df$POPESTIMATE2020)
 
-#make a table with covid data from the source data not including county "000" rows 
-#(state level data) that uses the state and name to add a fips column to match up with 
-#census data for populations. Then filter out the NYC fips which are missing from 
-#covid data and add back a row of the combined NYC info under 99999 fips. Finally 
-#select the top 510
+
+#As we did above make a table of census data.  Now will filter out the NYC fips which 
+#are missing from covid data and add back a row of the combined NYC info under 99999 
+#fips. Finally select the top 510
 county_top_death <- co_est2020 %>%
   select(COUNTY, STATE, STNAME, CTYNAME, POPESTIMATE2020) %>%
   filter(COUNTY != "000") %>%
@@ -57,7 +59,7 @@ cases_tidy <- cases %>%
   filter(county != "New York City") %>%
   bind_rows(cases_tidy_nyc)
 
-#make a table of omicron cases estimated to start after date 12/20/21 and only of the 
+#make a table of Omicron cases estimated to start after date 12/20/21 and only of the 
 #fips we have identified above the top 510 fips.  Then add a day column (days since start of 
 #omicron). Select only the columns of interest and group the information by fips
 #for calculation of newdeaths.  (if not grouped data will be erroneously calculated 
@@ -69,6 +71,18 @@ omicron_top_death <- cases_tidy %>%
   group_by(fips) %>%
   mutate(newdeaths=c(diff(deaths), NA)) %>%
   filter(newdeaths!=0)
+
+#search the omicron_top_death table for large negative values which we may wish 
+#censor.  
+lg_corrections <- omicron_top_death %>% 
+  filter(newdeaths < 0)
+View(lg_corrections)
+
+#This reveals a largely Massachusets problem.  As many of these are likely
+#true and accurate do not wish to exclude all.  As there seems to be asystematic
+#issue with the Mass will exclude instances when new deaths is less than negative 45
+omicron_top_death <- omicron_top_death %>% 
+  filter(newdeaths > -45)
 
 #make a table with rows organized by a fips label (perhaps redundant step)
 #and fill in the fips from above table
@@ -83,20 +97,15 @@ fips_Pred_D$ddn <- lapply(county_top_death$fips, function (zz) omicron_top_death
 
 #for each of these slices of data create a model of the data using lm polynomial function,
 #saving as column lm
-fips_Pred_D$lm <- 
-  lapply(fips_Pred_D$ddn, function(yy) lm(newdeaths ~ poly(day, degree = 6, raw = TRUE),  data = yy))
+fips_Pred_D$total_death <- 
+  lapply(fips_Pred_D$ddn, function(yy) sum(yy$newdeaths))
 
-#for each of these models create predicted value using pred function, saving as column Pred
-fips_Pred_D$Pred <- lapply(fips_Pred_D$lm, function (xx) predict(xx))
-
-#for each of these fips find the maximum (our peak) death of the model
-fips_Pred_D$P_max <- lapply(fips_Pred_D$Pred, function (ww) max(ww))
 
 #create column in the county top death table for our death peaks and one for 
 #peak per capita 
-county_top_death$death_peak <- round(as.double(fips_Pred_D$P_max), digits = 1)
-county_top_death$percap_death_pk <- 
-  round(county_top_death$death_peak/ (county_top_death$POPESTIMATE2020/100000), digit = 1)
+county_top_death$total_death <- as.numeric(fips_Pred_D$total_death)
+county_top_death$total_death_per_cap <- 
+  round(county_top_death$total_death / (county_top_death$POPESTIMATE2020/100000), digit = 2)
 
 #check the final table for missing values, should be zero
 sum(is.na(county_top_death))
@@ -169,4 +178,23 @@ View(prob2_df_na)
 #prob2_df is tidy and ready for use in generating plots of (peak) Omicron deaths
 #per Capita vs current vaccination rate for each county..
 
+#2. Plot total Omicron deaths per capita vs the current county vaccination rate.
+ggplot(prob2_df, aes(Series_Complete_Pop_Pct, total_death_per_cap)) + 
+  geom_point()
+ggplot(prob2_df, aes(Series_Complete_Pop_Pct, total_death_per_cap)) + 
+  geom_smooth()
 
+#fips with vaccination rate < 50%
+low_vax <- prob2_df %>% 
+  filter(Series_Complete_Pop_Pct <= 50)
+
+#extra stuff I was testing out not needed for our assignment
+# library(tidyverse)
+# library(urbnmapr)
+# 
+# counties_sf <- get_urbn_map("counties", sf = TRUE)
+# low_vax_counties_sf <- left_join(low_vax, counties_sf, by = c("fips" = "county_fips")) 
+#   
+# low_vax_counties_sf %>% 
+#   ggplot(aes()) +
+#   geom_sf(fill = "grey", color = "#ffffff")
