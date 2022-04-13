@@ -79,8 +79,8 @@ lg_corrections <- omicron_top_death %>%
 View(lg_corrections)
 
 #This reveals a largely Massachusets problem.  As many of these are likely
-#true and accurate do not wish to exclude all.  As there seems to be asystematic
-#issue with the Mass will exclude instances when new deaths is less than negative 45
+#true and accurate do not wish to exclude all.  As there seems to be a systematic
+#issue with Mass will exclude instances when new deaths is less than negative 45
 omicron_top_death <- omicron_top_death %>% 
   filter(newdeaths > -45)
 
@@ -180,9 +180,11 @@ View(prob2_df_na)
 
 #2. Plot total Omicron deaths per capita vs the current county vaccination rate.
 ggplot(prob2_df, aes(Series_Complete_Pop_Pct, total_death_per_cap)) + 
-  geom_point()
-ggplot(prob2_df, aes(Series_Complete_Pop_Pct, total_death_per_cap)) + 
-  geom_smooth()
+  geom_point(size = .75) +
+  geom_smooth() +
+  labs(title = "Omicron Deaths vs Vaccination Rate", subtitle = "By County", 
+       x = "% of Population Vaccinated", y = "Deaths per Capita") +
+  theme_bw()
 
 #fips with vaccination rate < 50%
 low_vax <- prob2_df %>% 
