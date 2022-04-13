@@ -182,21 +182,15 @@ View(prob2_df_na)
 ggplot(prob2_df, aes(Series_Complete_Pop_Pct, total_death_per_cap)) + 
   geom_point(size = .75) +
   geom_smooth() +
-  labs(title = "Omicron Deaths vs Vaccination Rate", subtitle = "By County", 
-       x = "% of Population Vaccinated", y = "Deaths per Capita") +
+  labs(title = "Omicron Deaths vs Vaccinations", subtitle = "500 largest counties by population", 
+       x = "% of Population Vaccinated", y = "Deaths per Capita", caption = "Total COVID19 
+       Omicron variant deaths per capita versus current completed vaccinaion rate in the 
+       five hundred largest counties by population in the United States. Regression shown in 
+       blue with standard error in grey") +
+  annotate(geom = "text", x = 80, y = 130, label = "Standard error shown in grey") +
   theme_bw()
+ggsave("deaths_vs_vax.png", width = 14, height = 10, units = "cm")
 
 #fips with vaccination rate < 50%
 low_vax <- prob2_df %>% 
   filter(Series_Complete_Pop_Pct <= 50)
-
-#extra stuff I was testing out not needed for our assignment
-# library(tidyverse)
-# library(urbnmapr)
-# 
-# counties_sf <- get_urbn_map("counties", sf = TRUE)
-# low_vax_counties_sf <- left_join(low_vax, counties_sf, by = c("fips" = "county_fips")) 
-#   
-# low_vax_counties_sf %>% 
-#   ggplot(aes()) +
-#   geom_sf(fill = "grey", color = "#ffffff")
