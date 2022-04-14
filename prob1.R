@@ -20,15 +20,14 @@ top500_fips <- co_est2020 %>%
 #basically just the 5 NYC fips
 exc_fips <- setdiff(top500_fips$fips, cases$fips)
 
-#calculate the pop of NYC summing up the pop of its 5 fips
-pop_NYC_df <- top500_fips %>% 
+# #calculate the pop of NYC summing up the pop of its 5 fips
+pop_NYC_df <- top500_fips %>%
   filter(fips %in% exc_fips)
 pop_NYC <- sum(pop_NYC_df$POPESTIMATE2020)
 
 #make a table with census data from the source data not including county "000" rows 
 #(state level data) that uses the state and name to add a fips column to match up with 
-#census data for populations. Then filter out the NYC fips which are missing from 
-#covid data and add back a row of the combined NYC info under 99999 fips. Finally 
+#census data for populations. Finally 
 #select the top 500
 county_top_death <- co_est2020 %>%
   select(COUNTY, STATE, STNAME, CTYNAME, POPESTIMATE2020) %>%
@@ -64,8 +63,8 @@ omicron_top_death <- cases_tidy %>%
 
 #make a table with rows organized by a fips label (perhaps redundant step)
 #and fill in the fips from above table
-fips_Pred_D <- as.data.frame(paste0("fips_", county_top_death$fips))
-fips_Pred_D$fips <- county_top_death$fips
+fips_Pred_D <- data_frame(fips = county_top_death$fips)
+#fips_Pred_D <-fips_Pred_D %>% add_row(fips = "99999")
 
 #for each of these fips fill in another column that includes the corresponding slice 
 #of omicron death data
@@ -90,14 +89,33 @@ county_top_death$death_peak <- round(as.double(fips_Pred_D$P_max), digits = 1)
 county_top_death$percap_death_pk <- 
   round(county_top_death$death_peak/ (county_top_death$POPESTIMATE2020/100000), digit = 1)
 
-fips_vec_D <- as.list(county_top_death$fips)
+#select just the previously excluded NYC fips which will need to be added back in 
+#to match up with the geographic map for the heatmap plot.
+#also manually fill in the column with hand calculated peaks assuming 
+#per_cap_peak =1.8 just because it is easier than coding this task later
+NYC_counties <- co_est2020 %>%
+  select(COUNTY, STATE, STNAME, CTYNAME, POPESTIMATE2020) %>%
+  filter(COUNTY != "000") %>%
+  mutate(fips = paste0(STATE, COUNTY)) %>%
+  filter(fips %in% exc_fips) %>%
+  select(fips, CTYNAME, STNAME, POPESTIMATE2020)
+NYC_death_pk <- c(25.2, 45.7, 29.0, 40.1, 8.6)
+NYC_counties$death_peak <- NYC_death_pk
+
+#add the NYC fips back to our final data fram and fill in the missing per_cap_death
+#with the 1.8 we calculated (the 99999 fip).  Also subset out the no longer needed 
+#row for the 99999 fip.
+county_top_death_final <- county_top_death %>% 
+  bind_rows(NYC_counties) %>% 
+  mutate(percap_death_pk = replace(percap_death_pk, is.na(percap_death_pk), 1.8)) %>% 
+  subset(fips != "99999") %>% 
+  top_n(500, POPESTIMATE2020)
 
 #check the final table for missing values, should be zero
-sum(is.na(county_top_death))
+sum(is.na(county_top_death_final))
 
-
-#county_top_death is tidy and ready for use in generating heat map of peak 
-#Omicron deaths per Capita
+#save to share
+saveRDS(county_top_death_final, file = "county_top_death_final.RDS")
 
 
 #This plot code below works (not a heatmap) and is commented out to avoid generation on sourcing

@@ -189,7 +189,7 @@ ggplot(prob2_df, aes(Series_Complete_Pop_Pct, total_death_per_cap)) +
        blue with standard error in grey") +
   annotate(geom = "text", x = 80, y = 130, label = "Standard error shown in grey") +
   theme_bw()
-ggsave("deaths_vs_vax.png", width = 14, height = 10, units = "cm")
+ggsave("deaths_vs_vax_loess.png", width = 14, height = 10, units = "cm")
 
 #fips with vaccination rate < 50%
 low_vax <- prob2_df %>% 
